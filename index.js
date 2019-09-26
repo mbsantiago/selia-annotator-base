@@ -1,4 +1,4 @@
-const STATE = {
+const States = {
   EMPTY_ANNOTATOR: 'empty',
   EDITING: 'edit',
   DONE: 'done',
@@ -12,8 +12,9 @@ class AnnotatorBase {
     this.annotation = config.annotation || null;
     this.registerAnnotation = config.registerAnnotation || (() => null);
     this.edit = config.edit || false;
+    this.states = States
 
-    this.phase = (this.annotation !== null) ? STATE.DONE : STATE.EMPTY_ANNOTATOR;
+    this.phase = (this.annotation !== null) ? States.DONE : States.EMPTY_ANNOTATOR;
 
     this.ctx = this.canvas.getContext('2d');
     this.svg = document.createElementNS("http://www.w3.org/2000/svg", 'svg');
@@ -62,9 +63,9 @@ class AnnotatorBase {
   draw() {
     this.clean();
 
-    if (this.phase === STATE.DONE) {
+    if (this.phase === this.states.DONE) {
       this.drawAnnotation(this.annotation);
-    } else if (this.phase === STATE.EDITING) {
+    } else if (this.phase === this.states.EDITING) {
       this.drawEdit()
     }
   }
