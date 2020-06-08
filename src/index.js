@@ -186,6 +186,7 @@ class AnnotatorBase {
       () => this.draw(),
       false,
     );
+    this.onKeyPress = this.onKeyPress.bind(this);
     this.bindEvents();
 
     // Set event listener status based on activation variable.
@@ -404,6 +405,14 @@ class AnnotatorBase {
     }
   }
 
+  onKeyPress(event) {
+    if (!this.active) return;
+    if (!event.shiftKey) return;
+    if (event.key === 'A') this.setState(CREATE);
+    if (event.key === 'S') this.setState(SELECT);
+    if (event.key === 'D') this.setState(DELETE);
+  }
+
   bindEvents() {
     Object.keys(this.events).forEach((eventType) => {
       let listeners = this.events[eventType];
@@ -416,6 +425,8 @@ class AnnotatorBase {
         this.canvas.addEventListener(eventType, listener, false);
       });
     });
+
+    window.addEventListener('keypress', this.onKeyPress);
   }
 
   unmount() {
@@ -430,6 +441,8 @@ class AnnotatorBase {
         this.canvas.removeEventListener(eventType, listener);
       });
     });
+
+    window.removeEventListener('keypress', this.onKeyPress);
   }
 
   renderExtraTools() {

@@ -1,6 +1,6 @@
 {
   "name": "@selia/annotator",
-  "version": "2.1.1",
+  "version": "2.1.2",
   "description": "Base class for all selia annotators",
   "main": "index.js",
   "scripts": {
