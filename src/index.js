@@ -447,6 +447,7 @@ class AnnotatorBase {
         activator={() => this.activator()}
         setState={(state) => this.setState(state)}
         renderExtra={() => this.renderExtraTools()}
+        deleteAnnotation={() => this.deleteAnnotation(this.selectedAnnotation)}
       />
     );
   }

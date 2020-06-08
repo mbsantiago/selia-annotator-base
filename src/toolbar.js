@@ -62,7 +62,7 @@ class Toolbar extends React.Component {
     );
   }
 
-  renderDeleteButton() {
+  renderEraseButton() {
     const { states } = this.props;
     return (
       <button
@@ -88,6 +88,19 @@ class Toolbar extends React.Component {
     );
   }
 
+  renderDeleteButton() {
+    const { deleteAnnotation } = this.props;
+    return (
+      <button
+        type="submit"
+        className={buttonClass}
+        onClick={() => deleteAnnotation()}
+      >
+        <i className="fas fa-trash" />
+      </button>
+    );
+  }
+
   renderEditSection() {
     const { state } = this.state;
     const { states } = this.props;
@@ -100,6 +113,9 @@ class Toolbar extends React.Component {
         <div className="px-1" style={{ borderLeft: '1px solid grey' }} />
         <div className="mr-2">
           {this.renderEditButton()}
+        </div>
+        <div className="mr-2">
+          {this.renderDeleteButton()}
         </div>
         {renderExtra()}
       </>
@@ -118,7 +134,7 @@ class Toolbar extends React.Component {
           {this.renderCreateButton()}
         </div>
         <div className="mr-2">
-          {this.renderDeleteButton()}
+          {this.renderEraseButton()}
         </div>
         {this.renderEditSection()}
       </div>
