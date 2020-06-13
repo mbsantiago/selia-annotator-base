@@ -1,4 +1,7 @@
 import React from 'react';
+import ReactDOM from 'react-dom';
+
+import ToolbarContainer from './toolbarContainer';
 import Toolbar from './toolbar';
 
 
@@ -61,6 +64,7 @@ function dummyAnnotationRegister(annotation) {
 class AnnotatorBase {
   constructor(config) {
     this.canvas = config.canvas;
+    this.toolbar = config.toolbar;
     this.visualizer = config.visualizer;
 
     this.props = {};
@@ -171,7 +175,10 @@ class AnnotatorBase {
     }
 
     // States ENUM for internal reference
-    this.states = STATES;
+    this.states = {
+      ...STATES,
+      ...this.getStates(),
+    };
 
     // Style mapping
     this.styles = STYLES;
@@ -182,7 +189,7 @@ class AnnotatorBase {
     // Use 2D Context for annotation drawing.
     this.ctx = this.canvas.getContext('2d');
 
-    // Add event listeners to annotator canvas canvas
+    // Add event listeners to annotator canvas
     this.events = this.getEvents();
     this.canvas.addEventListener(
       'visualizer-update',
@@ -192,6 +199,11 @@ class AnnotatorBase {
     this.onKeyPress = this.onKeyPress.bind(this);
     this.bindEvents();
 
+    // Add on window size change behaviour, if defined
+    if (typeof this.onWindowResize === 'function') {
+      window.addEventListener('resize', this.onWindowResize.bind(this));
+    }
+
     // Set event listener status based on activation variable.
     if (this.active) {
       this.activateCanvasEvents();
@@ -199,15 +211,17 @@ class AnnotatorBase {
       this.deactivateCanvasEvents();
     }
 
-    // Toolbar reference
-    this.toolbar = null;
+    // Wait until toolbar has mounted.
+    this.toolbarContainer = null;
+    this.renderToolbar(() => {
+      // Initialize canvas and annotator
+      this.adjustSize();
+      this.init();
 
-    // Initialize canvas and annotator
-    this.adjustSize();
-    this.init();
-
-    // Wait for visualizer to be ready to start drawing annotations.
-    this.visualizer.waitUntilReady().then(() => this.draw());
+      // Wait for visualizer to be ready to start drawing annotations.
+      this.visualizer.waitUntilReady()
+        .then(() => this.draw());
+    });
   }
 
   /* eslint-disable class-methods-use-this, no-unused-vars */
@@ -277,6 +291,12 @@ class AnnotatorBase {
     this.draw();
   }
 
+  getStates() {
+    // Abtract method
+    // Return any additional states.
+    return {};
+  }
+
   setState(state) {
     if (state === SELECT || state === LIST) {
       this.selectedAnnotation = null;
@@ -285,6 +305,10 @@ class AnnotatorBase {
     this.props.setState(state);
     this.state = state;
     this.draw();
+
+    if (this.toolbarContainer.setState) {
+      this.toolbarContainer.setState({ state });
+    }
   }
 
   selectAnnotation(annotationId) {
@@ -337,6 +361,7 @@ class AnnotatorBase {
 
   adjustSize() {
     this.visualizer.adjustSize();
+    this.visualizer.draw();
 
     this.canvas.style.width = '100%';
     this.canvas.style.height = '100%';
@@ -376,12 +401,23 @@ class AnnotatorBase {
     this.canvas.style.pointerEvents = 'none';
   }
 
+  setActivator(activator) {
+    this.activator = () => {
+      activator();
+      this.activate();
+    };
+
+    if (this.toolbarContainer.setState) {
+      this.toolbarContainer.setState({ activator: this.activator });
+    }
+  }
+
   activate() {
     this.active = true;
     this.activateCanvasEvents();
 
-    if (this.toolbar.setState) {
-      this.toolbar.setState({ active: true });
+    if (this.toolbarContainer.setState) {
+      this.toolbarContainer.setState({ active: true });
     }
   }
 
@@ -389,8 +425,8 @@ class AnnotatorBase {
     this.active = false;
     this.deactivateCanvasEvents();
 
-    if (this.toolbar.setState) {
-      this.toolbar.setState({ active: false });
+    if (this.toolbarContainer.setState) {
+      this.toolbarContainer.setState({ active: false });
     }
   }
 
@@ -403,8 +439,8 @@ class AnnotatorBase {
       this.activateCanvasEvents();
     }
 
-    if (this.toolbar.setState) {
-      this.toolbar.setState((prevState) => ({ active: !prevState.active }));
+    if (this.toolbarContainer.setState) {
+      this.toolbarContainer.setState((prevState) => ({ active: !prevState.active }));
     }
   }
 
@@ -448,23 +484,29 @@ class AnnotatorBase {
     window.removeEventListener('keypress', this.onKeyPress);
   }
 
-  renderExtraTools() {
-    // Return a React component for extra buttons on the toolbar.
-    return null;
+  onWindowResize() {
+    this.adjustSize();
+    this.draw();
   }
 
-  renderToolbar() {
-    return (
-      <Toolbar
-        ref={(ref) => { this.toolbar = ref; }}
+  getToolbarComponent(props) {
+    return <Toolbar {...props} />;
+  }
+
+  renderToolbar(callback) {
+    ReactDOM.render(
+      <ToolbarContainer
+        ref={(ref) => { this.toolbarContainer = ref; }}
         active={this.active}
         states={this.states}
         state={this.state}
+        component={(props) => this.getToolbarComponent(props)}
         activator={() => this.activator()}
         setState={(state) => this.setState(state)}
-        renderExtra={() => this.renderExtraTools()}
         deleteAnnotation={() => this.deleteAnnotation(this.selectedAnnotation)}
-      />
+      />,
+      this.toolbar,
+      callback,
     );
   }
 }

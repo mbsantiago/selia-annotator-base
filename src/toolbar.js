@@ -1,142 +1,40 @@
 import React from 'react';
 
 
-const activeButtonClass = 'btn btn-primary';
-const buttonClass = 'btn btn-light';
-
-
 class Toolbar extends React.Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      active: props.active,
-      state: props.state,
-    };
-  }
-
-  getClassName(other) {
-    const { state, active } = this.state;
-    if (!active) return buttonClass;
-    return state === other ? activeButtonClass : buttonClass;
-  }
-
-  handleClick(state) {
-    const { setState, activator } = this.props;
-
-    // Signal to the exterior that the annotator has been activated.
-    activator();
-
-    // Change state in parent component.
-    setState(state);
-
-    this.setState({
-      state,
-      active: true,
-    });
-  }
-
-  renderSelectButton() {
-    const { states } = this.props;
-    return (
-      <button
-        type="submit"
-        className={this.getClassName(states.SELECT)}
-        onClick={() => this.handleClick(states.SELECT)}
-      >
-        <i className="fas fa-mouse-pointer" />
-      </button>
-    );
-  }
-
-  renderCreateButton() {
-    const { states } = this.props;
-    return (
-      <button
-        type="submit"
-        className={this.getClassName(states.CREATE)}
-        onClick={() => this.handleClick(states.CREATE)}
-      >
-        <i className="fas fa-plus" />
-      </button>
-    );
-  }
-
-  renderEraseButton() {
-    const { states } = this.props;
-    return (
-      <button
-        type="submit"
-        className={this.getClassName(states.DELETE)}
-        onClick={() => this.handleClick(states.DELETE)}
-      >
-        <i className="fas fa-eraser" />
-      </button>
-    );
-  }
-
-  renderEditButton() {
-    const { states } = this.props;
-    return (
-      <button
-        type="submit"
-        className={this.getClassName(states.EDIT)}
-        onClick={() => this.handleClick(states.EDIT)}
-      >
-        <i className="fas fa-edit" />
-      </button>
-    );
-  }
-
-  renderDeleteButton() {
-    const { deleteAnnotation } = this.props;
-    return (
-      <button
-        type="submit"
-        className={buttonClass}
-        onClick={() => deleteAnnotation()}
-      >
-        <i className="fas fa-trash" />
-      </button>
-    );
-  }
-
   renderEditSection() {
-    const { state } = this.state;
-    const { states } = this.props;
-    const { renderExtra } = this.props;
-
-    if (state !== states.EDIT) return <></>;
-
+    const { editButton, deleteButton } = this.props;
     return (
       <>
         <div className="px-1" style={{ borderLeft: '1px solid grey' }} />
         <div className="mr-2">
-          {this.renderEditButton()}
+          {editButton()}
         </div>
         <div className="mr-2">
-          {this.renderDeleteButton()}
+          {deleteButton()}
         </div>
-        {renderExtra()}
       </>
     );
   }
 
   render() {
-    const { states } = this.props;
+    const { state, states, selectButton, createButton, eraseButton } = this.props;
 
     return (
       <div className="col mb-2 d-flex">
         <div className="mr-2">
-          {this.renderSelectButton()}
+          {selectButton()}
         </div>
         <div className="mr-2">
-          {this.renderCreateButton()}
+          {createButton()}
         </div>
         <div className="mr-2">
-          {this.renderEraseButton()}
+          {eraseButton()}
         </div>
-        {this.renderEditSection()}
+        {state === states.EDIT
+          ? this.renderEditSection()
+          : null
+        }
       </div>
     );
   }
