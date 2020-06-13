@@ -85,9 +85,12 @@ class AnnotatorBase {
     // been activated. Should be a function of type
     // () => void;
     if (hasAttr(config, 'activator')) {
-      this.activator = config.activator;
+      this.activator = () => {
+        this.activate();
+        config.activator();
+      };
     } else {
-      this.activator = () => null;
+      this.activator = () => this.activate();
     }
 
     // State of the annotator. Can only be one of 'select', 'list',
