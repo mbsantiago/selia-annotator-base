@@ -56,7 +56,7 @@ class ToolbarContainer extends React.Component {
     const { states } = this.props;
     return (
       <button
-        type="submit"
+        type="button"
         className={this.getClassName(states.SELECT)}
         onClick={() => this.handleClick(states.SELECT)}
       >
@@ -69,7 +69,7 @@ class ToolbarContainer extends React.Component {
     const { states } = this.props;
     return (
       <button
-        type="submit"
+        type="button"
         className={this.getClassName(states.CREATE)}
         onClick={() => this.handleClick(states.CREATE)}
       >
@@ -82,7 +82,7 @@ class ToolbarContainer extends React.Component {
     const { states } = this.props;
     return (
       <button
-        type="submit"
+        type="button"
         className={this.getClassName(states.DELETE)}
         onClick={() => this.handleClick(states.DELETE)}
       >
@@ -95,7 +95,7 @@ class ToolbarContainer extends React.Component {
     const { states } = this.props;
     return (
       <button
-        type="submit"
+        type="button"
         className={this.getClassName(states.EDIT)}
         onClick={() => this.handleClick(states.EDIT)}
       >
@@ -108,7 +108,7 @@ class ToolbarContainer extends React.Component {
     const { deleteAnnotation } = this.props;
     return (
       <button
-        type="submit"
+        type="button"
         className={this.styles.button.danger}
         onClick={() => deleteAnnotation()}
       >
