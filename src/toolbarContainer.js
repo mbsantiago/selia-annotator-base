@@ -1,15 +1,13 @@
-import React from 'react';
-
+import React from "react";
 
 const styles = {
   button: {
-    default: 'btn btn-light m-1',
-    active: 'btn btn-primary m-1',
-    warning: 'btn btn-warning m-1',
-    danger: 'btn btn-text text-danger m-1',
+    default: "btn btn-light m-1",
+    active: "btn btn-primary m-1",
+    warning: "btn btn-warning m-1",
+    danger: "btn btn-text text-danger m-1",
   },
 };
-
 
 class ToolbarContainer extends React.Component {
   constructor(props) {
@@ -28,7 +26,9 @@ class ToolbarContainer extends React.Component {
   getClassName(other) {
     const { state, active } = this.state;
     if (!active) return this.styles.button.default;
-    return state === other ? this.styles.button.active : this.styles.button.default;
+    return state === other
+      ? this.styles.button.active
+      : this.styles.button.default;
   }
 
   handleClick(state) {
@@ -46,19 +46,14 @@ class ToolbarContainer extends React.Component {
     });
   }
 
-  handleMove() {
-    this.state.activator();
-    this.props.setState(this.states.MOVING);
-    this.setState({ active: true, state: this.states.MOVING });
-  }
-
   renderSelectButton() {
     const { states } = this.props;
     return (
       <button
         type="button"
-        className={this.getClassName(states.SELECT)}
-        onClick={() => this.handleClick(states.SELECT)}
+        className={this.getClassName(states.LIST)}
+        onClick={() => this.handleClick(states.LIST)}
+        key="select-button"
       >
         <i className="fas fa-mouse-pointer" />
       </button>
@@ -70,8 +65,9 @@ class ToolbarContainer extends React.Component {
     return (
       <button
         type="button"
-        className={this.getClassName(states.CREATE)}
-        onClick={() => this.handleClick(states.CREATE)}
+        className={this.getClassName(states.LIST)}
+        onClick={() => this.handleClick(states.LIST)}
+        key="create-button"
       >
         <i className="fas fa-plus" />
       </button>
@@ -85,6 +81,7 @@ class ToolbarContainer extends React.Component {
         type="button"
         className={this.getClassName(states.DELETE)}
         onClick={() => this.handleClick(states.DELETE)}
+        key="erase-button"
       >
         <i className="fas fa-eraser" />
       </button>
@@ -98,6 +95,7 @@ class ToolbarContainer extends React.Component {
         type="button"
         className={this.getClassName(states.EDIT)}
         onClick={() => this.handleClick(states.EDIT)}
+        key="edit-button"
       >
         <i className="fas fa-edit" />
       </button>
@@ -111,6 +109,7 @@ class ToolbarContainer extends React.Component {
         type="button"
         className={this.styles.button.danger}
         onClick={() => deleteAnnotation()}
+        key="delete-button"
       >
         <i className="fas fa-trash" />
       </button>
@@ -141,6 +140,5 @@ class ToolbarContainer extends React.Component {
     );
   }
 }
-
 
 export default ToolbarContainer;

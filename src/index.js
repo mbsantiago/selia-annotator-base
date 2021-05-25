@@ -1,177 +1,39 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
+import React from "react";
+import ReactDOM from "react-dom";
 
-import ToolbarContainer from './toolbarContainer';
-import Toolbar from './toolbar';
+import ToolbarContainer from "./toolbarContainer";
+import Toolbar from "./toolbar";
 
-
-const LIST = 'list';
-const SELECT = 'select';
-const CREATE = 'create';
-const EDIT = 'edit';
-const DELETE = 'delete';
-const STATES = {
-  LIST,
-  SELECT,
-  CREATE,
-  EDIT,
-  DELETE,
-};
-
-
-const LIST_STYLE = {
-  strokeStyle: 'yellow',
-  lineWidth: 1,
-};
-const SELECT_STYLE = {
-  strokeStyle: 'cyan',
-  lineWidth: 4,
-};
-const CREATE_STYLE = {
-  lineDash: [10, 15],
-  strokeStyle: 'red',
-  lineWidth: 4,
-};
-const EDIT_STYLE = {
-  strokeStyle: 'yellow',
-  lineWidth: 4,
-};
-const DELETE_STYLE = {
-  strokeStyle: 'red',
-  lineWidth: 4,
-};
-const STYLES = {
-  LIST_STYLE,
-  SELECT_STYLE,
-  CREATE_STYLE,
-  EDIT_STYLE,
-  DELETE_STYLE,
-};
-
-
-function hasAttr(obj, attr) {
-  return Object.prototype.hasOwnProperty.call(obj, attr);
-}
-
-
-let dummyIndex = 0;
-function dummyAnnotationRegister(annotation) {
-  dummyIndex += 1;
-  return dummyIndex;
-}
-
+import { DefaultAnnotationStorage, AnnotationStorage } from "./storage";
+import { STATES, DefaultStateManager, AnnotatorStateManager } from "./states";
+import { STYLES } from "./styles";
 
 class AnnotatorBase {
-  constructor(config) {
-    this.canvas = config.canvas;
-    this.toolbar = config.toolbar;
-    this.visualizer = config.visualizer;
+  constructor({
+    canvas,
+    toolbar,
+    visualizer,
+    annotations = null,
+    state = null,
+  } = {}) {
+    this.canvas = canvas;
+    this.toolbar = toolbar;
+    this.visualizer = visualizer;
 
-    this.props = {};
-
-    // Annotations object. Should be a mapping of the type
-    // { annotationId: annotation }. AnnotationIDs should be
-    // strings.
-    if (hasAttr(config, 'annotations')) {
-      this.annotations = config.annotations;
+    // State object. Should implement the interface defined by the
+    // StateManager class.
+    if (state === null) {
+      this.state = new DefaultStateManager();
     } else {
-      this.annotations = {};
+      this.state = state;
     }
 
-    // Indicates whether the annotator is active
-    if (hasAttr(config, 'active')) {
-      this.active = config.active;
+    // Annotations object. Should implement the interface defined by
+    // the AnnotationStorage class.
+    if (annotations === null) {
+      this.annotations = new DefaultAnnotationStorage();
     } else {
-      this.active = true;
-    }
-
-    // Function to signal to the exterior that the annotator has
-    // been activated. Should be a function of type
-    // () => void;
-    if (hasAttr(config, 'activator')) {
-      this.activator = () => {
-        this.activate();
-        config.activator();
-      };
-    } else {
-      this.activator = () => this.activate();
-    }
-
-    // State of the annotator. Can only be one of 'select', 'list',
-    // 'create', 'edit', 'delete';
-    if (hasAttr(config, 'state')) {
-      this.state = config.state;
-    } else {
-      this.state = CREATE;
-    }
-
-    // External function used to notify of a change in state. Should be
-    // a function of type (state) => void.
-    if (hasAttr(config, 'setState')) {
-      this.props.setState = config.changeState;
-    } else {
-      this.props.setState = (state) => null;
-    }
-
-    // External function used to register a new annotation. Should be
-    // a function of type (annotation) => annotationId. It should
-    // return null if the externall registration was unsuccessful.
-    // Annotation ID should be strings.
-    if (hasAttr(config, 'registerAnnotation')) {
-      this.props.registerAnnotation = config.registerAnnotation;
-    } else {
-      this.props.registerAnnotation = dummyAnnotationRegister;
-    }
-
-    // External function used to select an annotation. Should be
-    // a function of type (annotationId) => bool. The function should
-    // return the externally updated annotation.
-    if (hasAttr(config, 'updateAnnotation')) {
-      this.props.updateAnnotation = config.updateAnnotation;
-    } else {
-      this.props.updateAnnotation = (annotationId, annotation) => annotation;
-    }
-
-    // External function used to update an annotation. Should be
-    // a function of type (annotationId, annotation) => bool. The function
-    // should return if the external update was successful.
-    if (hasAttr(config, 'selectAnnotation')) {
-      this.props.selectAnnotation = config.selectAnnotation;
-    } else {
-      this.props.selectAnnotation = (annotationId) => true;
-    }
-
-    // External function used to get the annotation style. Should
-    // be a function of type (annotationId) => style. `style` is
-    // an object with style directives.
-    if (hasAttr(config, 'getAnnotationStyle')) {
-      this.props.getAnnotationStyle = config.getAnnotationStyle;
-    } else {
-      this.props.getAnnotationStyle = (annotationId) => {};
-    }
-
-    // External function used to mark an annotation when hovered on.
-    // Should be a function of type (annotationId) => void;
-    if (hasAttr(config, 'hoverOnAnnotation')) {
-      this.props.hoverOnAnnotation = config.hoverOnAnnotation;
-    } else {
-      this.props.hoverOnAnnotation = (annotationId) => null;
-    }
-
-    // External function used to delete an annotation. Should be
-    // a function of type (annotationId) => bool. The function should
-    // return if the external delete was successfull.
-    if (hasAttr(config, 'deleteAnnotation')) {
-      this.props.deleteAnnotation = config.deleteAnnotation;
-    } else {
-      this.props.deleteAnnotation = (annotationId) => true;
-    }
-
-    // Currently selected annotation.
-    if (hasAttr(config, 'selectedAnnotation')) {
-      this.selectedAnnotation = config.selectedAnnotation;
-    } else {
-      this.selectedAnnotation = null;
+      this.annotations = annotations;
     }
 
     // States ENUM for internal reference
@@ -183,29 +45,20 @@ class AnnotatorBase {
     // Style mapping
     this.styles = STYLES;
 
-    // To be used when mouse is over annotation
-    this.hoverAnnotation = null;
-
     // Use 2D Context for annotation drawing.
-    this.ctx = this.canvas.getContext('2d');
+    this.ctx = this.canvas.getContext("2d");
 
     // Add event listeners to annotator canvas
     this.events = this.getEvents();
-    this.canvas.addEventListener(
-      'visualizer-update',
-      () => this.draw(),
-      false,
-    );
+    this.canvas.addEventListener("visualizer-update", () => this.draw(), false);
     this.onKeyPress = this.onKeyPress.bind(this);
     this.bindEvents();
 
-    // Add on window size change behaviour, if defined
-    if (typeof this.onWindowResize === 'function') {
-      window.addEventListener('resize', this.onWindowResize.bind(this));
-    }
+    // Add on window size change behaviour
+    window.addEventListener("resize", this.onWindowResize.bind(this));
 
     // Set event listener status based on activation variable.
-    if (this.active) {
+    if (this.state.isActive()) {
       this.activateCanvasEvents();
     } else {
       this.deactivateCanvasEvents();
@@ -219,8 +72,7 @@ class AnnotatorBase {
       this.init();
 
       // Wait for visualizer to be ready to start drawing annotations.
-      this.visualizer.waitUntilReady()
-        .then(() => this.draw());
+      this.visualizer.waitUntilReady().then(() => this.draw());
     });
   }
 
@@ -245,49 +97,51 @@ class AnnotatorBase {
     this.clean();
     this.drawAnnotations();
 
-    if (this.state === CREATE) {
+    if (this.state.is(this.states.CREATE)) {
       this.drawCreation();
       return;
     }
 
-    if (this.state === EDIT) {
+    if (this.state.is(this.states.EDIT)) {
       this.drawEdit();
     }
   }
 
   drawAnnotations() {
-    Object.entries(this.annotations).forEach(([annotationId, annotation]) => {
-      const style = this.getAnnotationStyle(annotationId);
+    for (let [id, annotation] of this.annotations.list()) {
+      const style = this.getAnnotationStyle(id);
       this.drawAnnotation(annotation, style);
-    });
+    }
   }
 
-  getAnnotationStyle(annotationId) {
-    if (this.selectedAnnotation === annotationId && this.state === EDIT) {
-      return EDIT_STYLE;
-    }
-
-    if (this.hoverAnnotation === annotationId && this.state === SELECT) {
-      return SELECT_STYLE;
-    }
-
-    if (this.hoverAnnotation === annotationId && this.state === DELETE) {
-      return DELETE_STYLE;
-    }
-
-    return {
-      ...LIST_STYLE,
-      ...this.props.getAnnotationStyle(annotationId),
+  getAnnotationStyle(id) {
+    const style = {
+      ...this.styles.BASE_STYLE,
+      ...this.annotations.getStyle(id),
     };
+
+    if (this.annotations.isSelected(id) && this.state.is(this.states.EDIT)) {
+      return { ...style, ...this.styles.EDIT_STYLE };
+    }
+
+    if (this.annotations.isHover(id) && this.state.is(this.states.LIST)) {
+      return { ...style, ...this.styles.HOVER_STYLE };
+    }
+
+    if (this.annotations.isHover(id) && this.state.is(this.states.DELETE)) {
+      return { ...style, ...this.styles.DELETE_STYLE };
+    }
+
+    return style;
   }
 
-  setSelectedAnnotation(annotationId) {
-    this.selectedAnnotation = annotationId;
+  setSelectedAnnotation(id) {
+    this.annotations.select(id);
     this.draw();
   }
 
-  setHoverAnnotation(annotationId) {
-    this.hoverAnnotation = annotationId;
+  setHoverAnnotation(id) {
+    this.annotations.hover(id);
     this.draw();
   }
 
@@ -298,57 +152,64 @@ class AnnotatorBase {
   }
 
   setState(state) {
-    if (state === SELECT || state === LIST) {
-      this.selectedAnnotation = null;
+    if (state === this.states.LIST || state === this.states.CREATE) {
+      this.annotations.select(null);
     }
 
-    this.props.setState(state);
-    this.state = state;
+    this.state.set(state);
     this.draw();
 
     if (this.toolbarContainer.setState) {
-      this.toolbarContainer.setState({ state });
+      this.toolbarContainer.setState({ state: this.state.get() });
     }
   }
 
-  selectAnnotation(annotationId) {
-    this.props.selectAnnotation(annotationId);
-    this.selectedAnnotation = annotationId;
-    this.setState(this.states.EDIT);
+  selectAnnotation(id) {
+    this.annotations.select(id);
+
+    // Only edit annotation if possible
+    if (this.annotations.canEdit(id)) {
+      this.setState(this.states.EDIT);
+    }
+
     this.draw();
   }
 
   registerAnnotation(annotation) {
     const validated = this.validateAnnotation(annotation);
-    const id = this.props.registerAnnotation(validated);
 
+    let id = this.annotations.create(validated);
+    // Do nothing if creation was not succesful
     if (id === null) return;
 
-    this.annotations[id] = validated;
-    this.selectedAnnotation = id;
+    this.annotations.select(id);
     this.setState(this.states.EDIT);
     this.draw();
   }
 
-  updateAnnotation(annotationId, annotation) {
+  updateAnnotation(id, annotation) {
     const validated = this.validateAnnotation(annotation);
-    const updatedAnnotation = this.props.updateAnnotation(annotationId, validated);
-    this.annotations[annotationId] = updatedAnnotation;
+
+    if (this.annotations.canEdit(id)) {
+      this.annotations.edit(id, validated);
+    }
+
     this.draw();
   }
 
-  hoverOnAnnotation(annotationId) {
-    this.props.hoverOnAnnotation(annotationId);
-    this.hoverAnnotation = annotationId;
+  hoverOnAnnotation(id) {
+    this.annotations.hover(id);
     this.draw();
   }
 
-  deleteAnnotation(annotationId) {
-    const successful = this.props.deleteAnnotation(annotationId);
+  deleteAnnotation(id) {
+    if (!this.annotations.canDelete(id)) return;
+
+    const successful = this.annotations.delete(id);
     if (!successful) return;
 
-    delete this.annotations[annotationId];
-    this.setState(this.states.SELECT);
+    this.annotations.select(null);
+    this.setState(this.states.LIST);
     this.draw();
   }
 
@@ -363,30 +224,24 @@ class AnnotatorBase {
     this.visualizer.adjustSize();
     this.visualizer.draw();
 
-    this.canvas.style.width = '100%';
-    this.canvas.style.height = '100%';
+    this.canvas.style.width = "100%";
+    this.canvas.style.height = "100%";
     this.canvas.width = this.visualizer.canvas.width;
     this.canvas.height = this.visualizer.canvas.height;
   }
 
   getMouseEventPosition(event) {
-    const x = event.offsetX || (event.pageX - this.canvas.offsetLeft);
-    const y = event.offsetY || (event.pageY - this.canvas.offsetTop);
+    const x = event.offsetX || event.pageX - this.canvas.offsetLeft;
+    const y = event.offsetY || event.pageY - this.canvas.offsetTop;
     return this.pixelToCoords(this.createPoint(x, y));
   }
 
   pixelToCoords(p) {
-    return this.createPoint(
-      p.x / this.canvas.width,
-      p.y / this.canvas.height,
-    );
+    return this.createPoint(p.x / this.canvas.width, p.y / this.canvas.height);
   }
 
   coordsToPixel(p) {
-    return this.createPoint(
-      p.x * this.canvas.width,
-      p.y * this.canvas.height,
-    );
+    return this.createPoint(p.x * this.canvas.width, p.y * this.canvas.height);
   }
 
   clean() {
@@ -394,69 +249,52 @@ class AnnotatorBase {
   }
 
   activateCanvasEvents() {
-    this.canvas.style.pointerEvents = 'auto';
+    this.canvas.style.pointerEvents = "auto";
   }
 
   deactivateCanvasEvents() {
-    this.canvas.style.pointerEvents = 'none';
-  }
-
-  setActivator(activator) {
-    this.activator = () => {
-      activator();
-      this.activate();
-    };
-
-    if (this.toolbarContainer.setState) {
-      this.toolbarContainer.setState({ activator: this.activator });
-    }
+    this.canvas.style.pointerEvents = "none";
   }
 
   activate() {
-    this.active = true;
+    this.state.activate();
     this.activateCanvasEvents();
 
     if (this.toolbarContainer.setState) {
-      this.toolbarContainer.setState({ active: true });
+      this.toolbarContainer.setState({ active: this.state.isActive() });
     }
   }
 
   deactivate() {
-    this.active = false;
+    this.state.deactivate();
     this.deactivateCanvasEvents();
 
     if (this.toolbarContainer.setState) {
-      this.toolbarContainer.setState({ active: false });
+      this.toolbarContainer.setState({ active: this.state.isActive() });
     }
   }
 
   toggleActivate() {
-    if (this.active) {
-      this.active = false;
-      this.deactivateCanvasEvents();
+    if (this.state.isActive()) {
+      this.activate();
     } else {
-      this.active = true;
-      this.activateCanvasEvents();
-    }
-
-    if (this.toolbarContainer.setState) {
-      this.toolbarContainer.setState((prevState) => ({ active: !prevState.active }));
+      this.deactivate();
     }
   }
 
   onKeyPress(event) {
-    if (!this.active) return;
+    if (!this.state.isActive()) return;
     if (!event.shiftKey) return;
-    if (event.key === 'A') this.setState(CREATE);
-    if (event.key === 'S') this.setState(SELECT);
-    if (event.key === 'D') this.setState(DELETE);
+    if (event.key === "S") this.setState(this.states.LIST);
+    if (event.key === "A") this.setState(this.states.CREATE);
+    if (event.key === "D") this.setState(this.states.DELETE);
   }
 
   bindEvents() {
     Object.keys(this.events).forEach((eventType) => {
       let listeners = this.events[eventType];
 
-      if (!(Array.isArray(listeners))) {
+      if (!Array.isArray(listeners)) {
         listeners = [listeners];
       }
 
@@ -465,14 +303,14 @@ class AnnotatorBase {
       });
     });
 
-    window.addEventListener('keypress', this.onKeyPress);
+    window.addEventListener("keypress", this.onKeyPress);
   }
 
   unmount() {
     Object.keys(this.events).forEach((eventType) => {
       let listeners = this.events[eventType];
 
-      if (!(Array.isArray(listeners))) {
+      if (!Array.isArray(listeners)) {
         listeners = [listeners];
       }
 
@@ -481,7 +319,11 @@ class AnnotatorBase {
       });
     });
 
-    window.removeEventListener('keypress', this.onKeyPress);
+    window.removeEventListener("keypress", this.onKeyPress);
+  }
+
+  deleteSelectedAnnotation() {
+    this.deleteAnnotation(this.annotations.getSelectedId());
   }
 
   onWindowResize() {
@@ -496,20 +338,22 @@ class AnnotatorBase {
   renderToolbar(callback) {
     ReactDOM.render(
       <ToolbarContainer
-        ref={(ref) => { this.toolbarContainer = ref; }}
-        active={this.active}
+        ref={(ref) => {
+          this.toolbarContainer = ref;
+        }}
+        active={this.state.isActive()}
+        state={this.state.get()}
         states={this.states}
-        state={this.state}
         component={(props) => this.getToolbarComponent(props)}
-        activator={() => this.activator()}
+        activator={() => this.activate()}
         setState={(state) => this.setState(state)}
-        deleteAnnotation={() => this.deleteAnnotation(this.selectedAnnotation)}
+        deleteAnnotation={() => this.deleteSelectedAnnotation()}
       />,
       this.toolbar,
-      callback,
+      callback
     );
   }
 }
 
-
 export default AnnotatorBase;
+export { AnnotationStorage, AnnotatorStateManager };

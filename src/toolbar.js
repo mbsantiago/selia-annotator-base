@@ -1,12 +1,15 @@
-import React from 'react';
-
+import React from "react";
 
 class Toolbar extends React.Component {
   renderEditSection() {
     const { editButton, deleteButton } = this.props;
     return (
       <>
-        <div className="px-1" style={{ borderLeft: '1px solid grey' }} />
+        <div
+          className="px-1"
+          style={{ borderLeft: "1px solid grey" }}
+          key="button-separator"
+        />
         {editButton()}
         {deleteButton()}
       </>
@@ -14,21 +17,23 @@ class Toolbar extends React.Component {
   }
 
   render() {
-    const { state, states, selectButton, createButton, eraseButton } = this.props;
+    const {
+      state,
+      states,
+      selectButton,
+      createButton,
+      eraseButton,
+    } = this.props;
 
     return (
       <div className="col p-2">
         {selectButton()}
         {createButton()}
         {eraseButton()}
-        {state === states.EDIT
-          ? this.renderEditSection()
-          : null
-        }
+        {state === states.EDIT ? this.renderEditSection() : null}
       </div>
     );
   }
 }
-
 
 export default Toolbar;
