@@ -13,7 +13,6 @@ const DELETE = "delete";
 
 const STATES = {
   LIST,
-  SELECT,
   CREATE,
   EDIT,
   DELETE,
