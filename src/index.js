@@ -356,4 +356,9 @@ class AnnotatorBase {
 }
 
 export default AnnotatorBase;
-export { AnnotationStorage, AnnotatorStateManager };
+export {
+  AnnotationStorage,
+  AnnotatorStateManager,
+  DefaultAnnotationStorage,
+  DefaultStateManager,
+};
