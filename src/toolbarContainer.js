@@ -65,8 +65,8 @@ class ToolbarContainer extends React.Component {
     return (
       <button
         type="button"
-        className={this.getClassName(states.LIST)}
-        onClick={() => this.handleClick(states.LIST)}
+        className={this.getClassName(states.CREATE)}
+        onClick={() => this.handleClick(states.CREATE)}
         key="create-button"
       >
         <i className="fas fa-plus" />
