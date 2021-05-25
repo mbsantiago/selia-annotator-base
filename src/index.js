@@ -276,9 +276,9 @@ class AnnotatorBase {
 
   toggleActivate() {
     if (this.state.isActive()) {
-      this.activate();
-    } else {
       this.deactivate();
+    } else {
+      this.activate();
     }
   }
 
