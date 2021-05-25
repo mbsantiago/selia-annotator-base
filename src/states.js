@@ -39,7 +39,7 @@ class AnnotatorStateManager {
 }
 
 class DefaultStateManager extends AnnotatorStateManager {
-  constructor({ active = true, state = LIST }) {
+  constructor({ active = true, state = LIST } = {}) {
     super();
     this.active = active;
     this.state = state;

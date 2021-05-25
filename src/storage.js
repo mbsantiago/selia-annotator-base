@@ -71,12 +71,12 @@ function uuidv4() {
 }
 
 class DefaultAnnotationStorage extends AnnotationStorage {
-  constructor() {
+  constructor({ annotations = {}, selected = null, hover = null } = {}) {
     super();
 
-    this.annotations = {};
-    this.selectedAnnotation = null;
-    this.hoverAnnotation = null;
+    this.annotations = annotations;
+    this.selectedAnnotation = selected;
+    this.hoverAnnotation = hover;
   }
 
   list() {
